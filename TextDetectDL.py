@@ -46,6 +46,3 @@ if __name__ == '__main__':
 
 
 
-# author: qzane@live.com
-# reference: http://stackoverflow.com/a/23565051
-# further reading: http://docs.opencv.org/master/da/d56/group__text__detect.html#gsc.tab=0
