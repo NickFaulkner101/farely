@@ -1,0 +1,51 @@
+import os,sys
+import numpy as np
+import cv2
+from PIL import Image
+
+
+
+
+
+def text_detect(img,ele_size=(18,8)): #15,8 works ticket1
+    if len(img.shape)==3:
+        img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+    img_sobel = cv2.Sobel(img,cv2.CV_8U,1,0)#same as default,None,3,1,0,cv2.BORDER_DEFAULT)
+    img_threshold = cv2.threshold(img_sobel,0,255,cv2.THRESH_OTSU+cv2.THRESH_BINARY)
+    element = cv2.getStructuringElement(cv2.MORPH_RECT,ele_size)
+    img_threshold = cv2.morphologyEx(img_threshold[1],cv2.MORPH_CLOSE,element)
+    res = cv2.findContours(img_threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    if cv2.__version__.split(".")[0] == '3':
+        _, contours, hierarchy = res
+    else:
+        contours, hierarchy = res
+    Rect = [cv2.boundingRect(i) for i in contours if i.shape[0]>100]
+    RectP = [(int(i[0]-i[2]*0.08),int(i[1]-i[3]*0.08),int(i[0]+i[2]*1.1),int(i[1]+i[3]*1.1)) for i in Rect]
+    return RectP
+
+
+def main(inputFile):
+    outputFile = inputFile.split('.')[0]+'-rectangles.'+'.'.join(inputFile.split('.')[1:])
+    print(outputFile)
+    img = cv2.imread(inputFile)
+    alpha=2
+    beta=50
+    imageedited=cv2.addWeighted(img,alpha,np.zeros(img.shape,img.dtype), 0, beta)
+
+
+    rect = text_detect(imageedited)
+    for i in rect:
+        cv2.rectangle(img,i[:2],i[2:],(255,0,0),5)  #this actually draws the rectangle, thickness 5
+    cv2.imwrite(outputFile, img)
+
+    image = Image.open(outputFile)
+    image.show()
+
+if __name__ == '__main__':
+    main(sys.argv[1]) 
+
+
+
+# author: qzane@live.com
+# reference: http://stackoverflow.com/a/23565051
+# further reading: http://docs.opencv.org/master/da/d56/group__text__detect.html#gsc.tab=0
